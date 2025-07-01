@@ -1,4 +1,15 @@
 "use strict";
+/**
+ * Pihhthon Header Formatter
+ * Copyright (C) 2025 Filipe Sá
+ *
+ * This file is part of Pihhthon Header Formatter.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -106,28 +117,45 @@ function formatSelectedBlock(code) {
         const paddedLhs = lhsClean.padEnd(maxLhsLen, " ");
         return `${paddedLhs} = ${rhsClean}`;
     });
-    // Step 2: Multiline RHS if complex expr
+    // Step 2: Expand arithmetic expressions only
     const expandedLines = [];
     for (const line of alignedLines) {
         if (!line.includes("=")) {
             expandedLines.push(line);
             continue;
         }
-        const [lhs, rhs] = line.split("=");
-        const trimmedRhs = rhs.trim();
-        const tokens = splitExpression(trimmedRhs);
-        if (tokens.length <= 1) {
+        const [lhs, rhsRaw] = line.split("=");
+        const rhs = rhsRaw.trim();
+        // Don't expand if it's:
+        const isString = /^["'].*["']$/.test(rhs);
+        const isArray = /^\[.*\]$/.test(rhs);
+        const isObject = /^\{.*\}$/.test(rhs);
+        const isNumber = /^[\d.\-+eE]+$/.test(rhs); // handles scientific notation
+        if (isString || isArray || isObject || isNumber) {
             expandedLines.push(line);
+            continue;
         }
-        else {
-            expandedLines.push(`${lhs.trim()} = (`);
-            for (let i = 0; i < tokens.length; i++) {
-                const isLast = i === tokens.length - 1;
-                expandedLines.push(`  ${tokens[i]}${isLast ? "" : " " + tokens[i + 1]}`);
-                i++; // Skip operator
+        const tokens = splitExpression(rhs);
+        const operators = ["+", "-", "*", "/"];
+        const isSimpleExpr = tokens.length > 1 && tokens.some((t) => operators.includes(t));
+        if (!isSimpleExpr) {
+            expandedLines.push(line);
+            continue;
+        }
+        // Expand expression
+        expandedLines.push(`${lhs.trim()} = (`);
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            const nextToken = tokens[i + 1] || "";
+            if (operators.includes(nextToken)) {
+                expandedLines.push(`  ${token} ${nextToken}`);
+                i++; // skip operator
             }
-            expandedLines.push(")");
+            else {
+                expandedLines.push(`  ${token}`);
+            }
         }
+        expandedLines.push(")");
     }
     return expandedLines.join("\n");
 }

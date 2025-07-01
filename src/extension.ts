@@ -115,7 +115,7 @@ function formatSelectedBlock(code: string): string {
     return `${paddedLhs} = ${rhsClean}`;
   });
 
-  // Step 2: Multiline RHS if complex expr
+  // Step 2: Expand arithmetic expressions only
   const expandedLines: string[] = [];
 
   for (const line of alignedLines) {
@@ -124,24 +124,44 @@ function formatSelectedBlock(code: string): string {
       continue;
     }
 
-    const [lhs, rhs] = line.split("=");
-    const trimmedRhs = rhs.trim();
+    const [lhs, rhsRaw] = line.split("=");
+    const rhs = rhsRaw.trim();
 
-    const tokens = splitExpression(trimmedRhs);
+    // Don't expand if it's:
+    const isString = /^["'].*["']$/.test(rhs);
+    const isArray = /^\[.*\]$/.test(rhs);
+    const isObject = /^\{.*\}$/.test(rhs);
+    const isNumber = /^[\d.\-+eE]+$/.test(rhs); // handles scientific notation
 
-    if (tokens.length <= 1) {
+    if (isString || isArray || isObject || isNumber) {
       expandedLines.push(line);
-    } else {
-      expandedLines.push(`${lhs.trim()} = (`);
-      for (let i = 0; i < tokens.length; i++) {
-        const isLast = i === tokens.length - 1;
-        expandedLines.push(
-          `  ${tokens[i]}${isLast ? "" : " " + tokens[i + 1]}`
-        );
-        i++; // Skip operator
-      }
-      expandedLines.push(")");
+      continue;
     }
+
+    const tokens = splitExpression(rhs);
+    const operators = ["+", "-", "*", "/"];
+
+    const isSimpleExpr =
+      tokens.length > 1 && tokens.some((t) => operators.includes(t));
+
+    if (!isSimpleExpr) {
+      expandedLines.push(line);
+      continue;
+    }
+
+    // Expand expression
+    expandedLines.push(`${lhs.trim()} = (`);
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const nextToken = tokens[i + 1] || "";
+      if (operators.includes(nextToken)) {
+        expandedLines.push(`  ${token} ${nextToken}`);
+        i++; // skip operator
+      } else {
+        expandedLines.push(`  ${token}`);
+      }
+    }
+    expandedLines.push(")");
   }
 
   return expandedLines.join("\n");

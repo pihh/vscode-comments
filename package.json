@@ -2,7 +2,7 @@
   "name": "pihhthon-header-formatter",
   "displayName": "Pihhthon Header Formatter",
   "description": "Auto-format Python comment headers (aligned and pretty).",
-  "version": "0.0.1",
+  "version": "1.0.2",
   "repository": "https://github.com/pihh/vscode-comments.git",
   "author": "Filipe mota de sa - aka Pihh <pihh.rocks@gmail.com>",
   "license": "GPL-3.0-or-later",
@@ -48,7 +48,7 @@
     "lint": "eslint src",
     "test": "vscode-test",
     "pack": "vsce package --no-dependencies",
-    "load": "pnpm install && pnpm run compile && pnpm dedupe && pnpm run pack &&  code --install-extension pihhthon-header-formatter-0.0.1.vsix"
+    "load": "pnpm install && pnpm run compile && pnpm dedupe && pnpm run pack &&  code --install-extension pihhthon-header-formatter-1.0.2.vsix"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
