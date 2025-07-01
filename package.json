@@ -3,6 +3,9 @@
   "displayName": "Pihhthon Header Formatter",
   "description": "Auto-format Python comment headers (aligned and pretty).",
   "version": "0.0.1",
+  "repository": "https://github.com/pihh/vscode-comments.git",
+  "author": "Filipe mota de sa - aka Pihh <pihh.rocks@gmail.com>",
+  "license": "GPL-3.0-or-later",
   "engines": {
     "vscode": "^1.101.0"
   },
